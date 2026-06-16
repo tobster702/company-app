@@ -3,7 +3,10 @@ import "./globals.css";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: siteConfig.name,
+  title: {
+    default: `${siteConfig.name} — AI Resume & Cover Letter Tailoring`,
+    template: `%s — ${siteConfig.name}`,
+  },
   description: siteConfig.tagline,
 };
 

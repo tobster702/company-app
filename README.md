@@ -1,92 +1,67 @@
-# Company App — Technical Foundation
+# ResumeRocket
 
-The company's web foundation: a boring, fast-to-ship stack the first product MVP
-can grow into. Built for time-to-first-revenue and reversibility.
+AI résumé & career toolkit. Paste your resume + a job description and get an
+ATS-optimized tailored resume, a matching cover letter, likely interview
+questions with answer guidance, and optimized LinkedIn copy — in under a minute.
 
-**Stack:** Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Vitest ·
-ESLint + Prettier. Postgres is the chosen database for when we add server-side
-data (not yet wired — see [Roadmap](#roadmap--adding-postgres)).
+**Stack:** Next.js 16 (App Router, server runtime) · TypeScript · Tailwind CSS
+v4 · Anthropic SDK (Claude) · Zod · Vitest · ESLint + Prettier.
 
 ## Prerequisites
 
-- Node.js 20+ (developed on Node 24)
+- Node.js 20+
 - npm 10+
+- An Anthropic API key (or `RESUME_DEMO_MODE=1` for keyless local UI work)
 
 ## Getting started
 
 ```bash
-npm install        # install dependencies
-npm run dev        # start the dev server at http://localhost:3000
+cp .env.example .env.local   # add ANTHROPIC_API_KEY (or set RESUME_DEMO_MODE=1)
+npm install
+npm run dev                  # http://localhost:3000
 ```
-
-Edit `src/app/page.tsx` and the page hot-reloads.
 
 ## Everyday commands
 
-| Command              | What it does                             |
-| -------------------- | ---------------------------------------- |
-| `npm run dev`        | Dev server with hot reload               |
-| `npm run build`      | Production build → static site in `out/` |
-| `npm test`           | Run the Vitest test suite once           |
-| `npm run test:watch` | Run tests in watch mode                  |
-| `npm run lint`       | ESLint                                   |
-| `npm run format`     | Format the repo with Prettier            |
-| `npm run typecheck`  | TypeScript type-check (no emit)          |
+| Command              | What it does                          |
+| -------------------- | ------------------------------------- |
+| `npm run dev`        | Dev server with hot reload            |
+| `npm run build`      | Production (server) build             |
+| `npm start`          | Run the production server             |
+| `npm test`           | Run the Vitest test suite once        |
+| `npm run lint`       | ESLint                                |
+| `npm run typecheck`  | TypeScript type-check (no emit)       |
 
-## Project structure
+## How it works
 
 ```
 src/
-  app/            # Next.js App Router: routes, layouts, pages
-    layout.tsx    # Root layout + metadata
-    page.tsx      # Landing page (hello world)
-    globals.css   # Tailwind + theme tokens
-  lib/            # Framework-free helpers + business logic (unit-tested here)
-    site.ts       # Site config + pure helpers
-    site.test.ts  # Vitest unit tests
-public/           # Static assets served at /
-.github/workflows # CI (build/lint/test) + GitHub Pages deploy
+  app/
+    page.tsx                  # Landing page + the tool
+    layout.tsx                # Root layout + metadata
+    _components/
+      ResumeTool.tsx          # Client: form → /api/generate → results
+      CopyButton.tsx          # Copy-to-clipboard helper
+    api/generate/route.ts     # POST: validates input, runs the AI pipeline
+  lib/
+    resume/
+      schema.ts               # Zod request + application-pack contracts
+      prompt.ts               # Pure prompt assembly (unit-tested)
+      generate.ts             # Server-only: calls Claude (structured output)
+    site.ts                   # Site config + pure helpers
 ```
 
-The first product MVP grows into `src/app` (routes/UI) and `src/lib`
-(logic/data access). Add `src/components` for shared UI as it appears.
+The value path: `ResumeTool` POSTs `{ resumeText, jobDescription }` to
+`/api/generate`, which validates with Zod, calls Claude with a structured-output
+contract (`applicationPackSchema`), and returns a typed pack the UI renders.
 
-## Testing
+## Deployment
 
-[Vitest](https://vitest.dev) is the test runner. Tests live next to the code as
-`*.test.ts` / `*.test.tsx` under `src/`. Run `npm test`. The smallest test
-(`src/lib/site.test.ts`) asserts the landing-page greeting.
-
-## Deploy
-
-The app builds to a fully static site (`output: "export"` in `next.config.ts`)
-and deploys to **GitHub Pages** via GitHub Actions — zero hosting cost and no
-extra credentials.
-
-- **Automatic:** every push to `main` runs the
-  [`deploy`](.github/workflows/deploy.yml) workflow, which builds and publishes
-  to GitHub Pages. Live URL: see the repo's **Settings → Pages** (and the
-  TOB-2 task comment).
-- **Repeatable local build** (produces the exact artifact that gets deployed):
-  ```bash
-  PAGES_BASE_PATH="/$(basename "$PWD")" npm run build   # static site in ./out
-  ```
-  Locally, just `npm run build` serves from `/`.
-
-### Roadmap — adding Postgres / a server host
-
-Static export has no server runtime, so it can't talk to Postgres directly.
-When the MVP needs a database, API routes, or auth:
-
-1. Remove `output: "export"` from `next.config.ts`.
-2. Move to a server host (Vercel, Railway, or Fly.io) — this needs hosting +
-   database credentials, tracked as a separate governance ticket to the CEO.
-3. Add the Postgres client and a `DATABASE_URL` env var (kept out of the repo).
-
-This keeps today's foundation reversible: the hello-world ships now for free,
-and the production path is a documented, incremental upgrade.
+This is a **server app** — it can't run on static GitHub Pages because the AI
+pipeline uses a secret API key. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the host
+setup (recommended: Vercel free tier).
 
 ## Secrets
 
-No secrets live in the repo. Runtime config goes in `.env*` files (gitignored).
-Provision real secrets in the host/CI secret store.
+No secrets in the repo. Set `ANTHROPIC_API_KEY` in `.env.local` (gitignored) for
+local dev and in the host's secret store for production.

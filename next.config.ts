@@ -1,16 +1,13 @@
 import type { NextConfig } from "next";
 
-// `PAGES_BASE_PATH` is set by the GitHub Pages deploy workflow to the repo
-// name (e.g. "/company-app") so static assets resolve under the project page
-// URL. Locally and on a server host it is unset, so the app serves from "/".
-const basePath = process.env.PAGES_BASE_PATH ?? "";
-
+// ResumeRocket needs a server runtime: the `/api/generate` route handler calls
+// the Anthropic API with a secret key (which must never ship to the browser),
+// and later Stripe webhooks + email capture need server endpoints too. That
+// rules out `output: "export"` (static GitHub Pages) — a static bundle can't run
+// route handlers or hold secrets. We deploy to a Node host (see DEPLOYMENT.md).
 const nextConfig: NextConfig = {
-  // Emit a fully static site into `out/` for zero-cost hosting (GitHub Pages).
-  // Swap to the default server output (or remove this) once we add server-side
-  // features (API routes, Postgres, auth) and deploy to a server host.
-  output: "export",
-  basePath: basePath || undefined,
+  // Leave image optimization off for now — we have no remote image pipeline yet
+  // and it keeps the build host-agnostic.
   images: { unoptimized: true },
 };
 

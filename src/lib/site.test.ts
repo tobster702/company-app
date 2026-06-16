@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { getGreeting, siteConfig } from "./site";
+import { pageTitle, siteConfig } from "./site";
 
-describe("getGreeting", () => {
-  it("greets the site by default", () => {
-    expect(getGreeting()).toBe(`Hello, ${siteConfig.name} 👋`);
+describe("siteConfig", () => {
+  it("is branded as ResumeRocket", () => {
+    expect(siteConfig.name).toBe("ResumeRocket");
+  });
+});
+
+describe("pageTitle", () => {
+  it("returns the bare site name with no section", () => {
+    expect(pageTitle()).toBe("ResumeRocket");
   });
 
-  it("greets a provided name", () => {
-    expect(getGreeting("World")).toBe("Hello, World 👋");
+  it("prefixes the section before the site name", () => {
+    expect(pageTitle("Pricing")).toBe("Pricing — ResumeRocket");
   });
 });

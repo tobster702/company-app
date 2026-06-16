@@ -1,17 +1,14 @@
 /**
- * Central place for site-wide constants and small pure helpers.
- * Keep this dependency-free so it is trivial to unit test.
+ * Site-wide constants and small pure helpers. Dependency-free so it's trivial
+ * to unit test and safe to import from both server and client components.
  */
 
 export const siteConfig = {
-  name: "Company App",
-  tagline: "Foundation is live. Ready to ship product.",
+  name: "ResumeRocket",
+  tagline: "Tailor your resume to any job in 60 seconds — and land more interviews.",
 } as const;
 
-/**
- * Returns the landing-page greeting. Pure function so the test runner can
- * assert on it without rendering React.
- */
-export function getGreeting(name: string = siteConfig.name): string {
-  return `Hello, ${name} 👋`;
+/** Page <title> for a given section, e.g. "Pricing — ResumeRocket". */
+export function pageTitle(section?: string): string {
+  return section ? `${section} — ${siteConfig.name}` : siteConfig.name;
 }
